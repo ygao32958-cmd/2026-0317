@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P5.js Interactive Text & DOM</title>
+  <!-- 引入 p5.js 函式庫 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- 引入 Google Fonts (Fredoka) 卡通圓體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <!-- 引入外部 CSS 檔案 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <script>
+    let inp; // 文字輸入框
+    let slider; // 大小滑桿
+    let btn; // 跳動開關按鈕
+    let sel; // 下拉選單
+    let iframeDiv; // 包覆 iframe 的 DIV
+    let myIframe; // 實際的 iframe 元素
+    let cp; // 顏色選擇器
+    let rotSlider; // 旋轉滑桿
+    let randColorBtn; // 隨機顏色按鈕
+    let moveSel; // 移動方式選單
+    
+    let isBouncing = false; // 控制是否跳動的布林變數
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      
+      // --- 1. 建立文字輸入框 ---
+      inp = createInput('Hello TKU');
+      inp.position(20, 30); // 左上角定位
+      inp.size(350, 70); // 放大輸入框尺寸
+      inp.style('font-size', '35px'); // 同步放大 JS 設定
+
+      // --- 2. 建立滑桿 ---
+      // 範圍 15-80，預設 30
+      slider = createSlider(15, 80, 30);
+      // 定位：在輸入框右邊 20px
+      // 第一排元件
+      slider.position(400, 55); // 調整位置
+      slider.style('width', '250px'); // 拉長滑桿
+
+      // --- 3. 建立跳動按鈕 ---
+      btn = createButton('跳動開關');
+      // 定位：在滑桿右邊 20px
+      btn.position(680, 30);
+      btn.size(180, 70); // 放大按鈕
+      // 按下按鈕切換狀態
+      btn.mousePressed(() => {
+        isBouncing = !isBouncing;
+      });
+
+      // --- 4. 建立下拉式選單 ---
+      sel = createSelect();
+      // 定位：在按鈕右邊 20px
+      sel.position(890, 30);
+      sel.size(220, 70); // 放大選單
+      
+      // 加入選項
+      sel.option('淡江大學');
+      sel.option('淡江教科系');
+      
+      // 設定預設選項對應的網址邏輯 (當選單改變時觸發)
+      sel.changed(updateIframeSrc);
+
+      // --- 6. 建立顏色選擇器 ---
+      cp = createColorPicker('#ffbe0b'); // 預設顏色
+      // --- 第二排元件 (Y 座標下移至 140) ---
+      cp.position(20, 140);
+      cp.size(100, 70); // 放大顏色選擇器
+
+      // --- 7. 建立旋轉滑桿 (旋鈕) ---
+      rotSlider = createSlider(0, 360, 0); // 0~360度，預設0
+      rotSlider.position(150, 165); // 垂直置中調整
+      rotSlider.size(250);
+
+      // --- 8. 建立隨機顏色按鈕 ---
+      randColorBtn = createButton('隨機顏色');
+      randColorBtn.position(430, 140);
+      randColorBtn.size(180, 70); // 放大
+      randColorBtn.mousePressed(() => {
+        let r = floor(random(255));
+        let g = floor(random(255));
+        let b = floor(random(255));
+        // 將隨機 RGB 轉換為 Hex 字串 (#RRGGBB) 並更新 ColorPicker
+        let hexColor = '#' + hex(r, 2) + hex(g, 2) + hex(b, 2);
+        cp.value(hexColor);
+      });
+
+      // --- 9. 建立 Iframe 顯示/隱藏按鈕 ---
+      let toggleIframeBtn = createButton('顯示/隱藏網頁');
+      // 使用 elt.offsetWidth 取得按鈕實際寬度，避免重疊
+      toggleIframeBtn.position(640, 140);
+      toggleIframeBtn.size(250, 70); // 放大
+      toggleIframeBtn.mousePressed(() => {
+        let currentVal = iframeDiv.style('display');
+        iframeDiv.style('display', currentVal === 'none' ? 'block' : 'none');
+      });
+
+      // --- 10. 建立移動方式選單 ---
+      moveSel = createSelect();
+      moveSel.position(920, 140);
+      moveSel.size(150, 70); // 放大
+      moveSel.option('波浪');
+      moveSel.option('旋轉');
+      moveSel.option('抖動');
+      moveSel.changed(() => {
+        isBouncing = true; // 當改變移動方式時，自動開始跳動
+      });
+
+      // --- 5. 建立 Iframe DIV 與 Iframe ---
+      iframeDiv = createDiv('');
+      iframeDiv.id('iframe-container');
+      
+      // 設定 DIV 樣式：置中，四周內距 200px
+      iframeDiv.style('position', 'fixed');
+      iframeDiv.style('top', '300px'); // 往下移更多，避開放大的按鈕
+      iframeDiv.style('left', '200px');
+      iframeDiv.style('right', '200px');
+      iframeDiv.style('bottom', '200px');
+      
+      // 透明度設定
+      iframeDiv.style('opacity', '0.95');
+      iframeDiv.style('background', 'white'); // 給個背景色以免內容重疊太亂
+      iframeDiv.style('z-index', '5'); // 確保在文字層之上，但在某些 UI 之下視需求調整
+
+      // 建立 iframe 元素放入 div 中
+      myIframe = createElement('iframe');
+      myIframe.parent(iframeDiv);
+      myIframe.style('width', '100%');
+      myIframe.style('height', '100%');
+      myIframe.style('border', 'none');
+      
+      // 初始化網址 (預設為淡江大學)
+      updateIframeSrc();
+    }
+
+    function draw() {
+      background('#FDF2F8'); // 馬卡龍粉色背景
+      
+      let txtContent = inp.value(); // 取得輸入框文字
+      let txtSize = slider.value(); // 取得滑桿數值
+      // 取得旋轉角度並加入時間因子讓其自動旋轉 (0.02 為旋轉速度)
+      let rotAngle = radians(rotSlider.value()) + frameCount * 0.02;
+      
+      textSize(txtSize);
+      noStroke();
+      fill(cp.color()); // 使用顏色選擇器的顏色
+      
+      // 計算文字寬度與間距
+      let txtW = textWidth(txtContent);
+      let spacingX = txtW + 20; // 水平間隔
+      let spacingY = 50; // 垂直間隔 (題目要求排與排間隔 50px)
+      let startY = 100;  // 題目要求從 Y=100 開始
+      let moveType = moveSel.selected(); // 取得目前的移動方式
+
+      // 雙重迴圈產生整面文字
+      for (let y = startY; y < height + txtSize; y += spacingY) {
+        for (let x = 0; x < width; x += spacingX) {
+          
+          let xOff = 0;
+          let yOff = 0;
+          
+          if (isBouncing) {
+            if (moveType === '波浪') {
+              xOff = map(sin(frameCount * 0.1 + y * 0.05), -1, 1, -10, 10);
+              yOff = map(cos(frameCount * 0.1 + x * 0.05), -1, 1, -10, 10);
+            } else if (moveType === '旋轉') {
+              xOff = cos(frameCount * 0.1 + x * 0.01) * 10;
+              yOff = sin(frameCount * 0.1 + y * 0.01) * 10;
+            } else if (moveType === '抖動') {
+              xOff = random(-3, 3);
+              yOff = random(-3, 3);
+            }
+          }
+          
+          // 繪製旋轉文字
+          push();
+          translate(x + xOff, y + yOff);
+          rotate(rotAngle); // 套用旋轉
+          text(txtContent, 0, 0); 
+          pop();
+        }
+      }
+    }
+
+    function updateIframeSrc() {
+      let selected = sel.selected();
+      if (selected === '淡江大學') {
+        myIframe.attribute('src', 'https://www.tku.edu.tw');
+      } else if (selected === '淡江教科系') {
+        myIframe.attribute('src', 'https://www.et.tku.edu.tw');
+      }
+    }
+
+    function windowResized() {
+      // ...
+    }
+  </script>
+</body>
+</html>

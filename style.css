@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* 防止捲軸出現 */
+  background-color: #FDF2F8; /* 馬卡龍粉色背景 */
+  font-family: 'Fredoka', cursive, sans-serif; /* 卡通字體 */
+}
+
+canvas {
+  display: block;
+}
+
+/* --- 卡通風格通用樣式 --- */
+
+/* 輸入框、按鈕、選單通用設定：粗框、圓角、硬陰影 */
+input, button, select {
+  font-family: 'Fredoka', cursive, sans-serif !important;
+  border: 4px solid #000 !important; /* 邊框加粗 */
+  border-radius: 30px !important; /* 圓角更圓 */
+  box-shadow: 6px 6px 0px rgba(0,0,0,0.8) !important; /* 陰影加深 */
+  outline: none;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* 文字輸入框 */
+input[type="text"] {
+  background-color: #fff;
+  color: #333;
+  padding-left: 20px;
+  font-size: 35px !important; /* 字體放大 */
+}
+
+/* 按鈕 */
+button {
+  background-color: #FFC8DD !important; /* 馬卡龍粉紅 */
+  color: #000 !important;
+  font-size: 30px !important; /* 字體放大 */
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+button:hover {
+  background-color: #FFD6E5 !important; /* 懸停變淺粉 */
+  transform: translate(-1px, -1px);
+  box-shadow: 8px 8px 0px #000 !important;
+}
+
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0px #000 !important;
+}
+
+/* 下拉選單 */
+select {
+  background-color: #BDE0FE !important; /* 馬卡龍粉藍 */
+  color: #000 !important;
+  font-size: 30px !important; /* 字體放大 */
+  cursor: pointer;
+  padding: 10px 20px;
+}
+
+/* 滑桿特殊樣式 (覆蓋預設樣式) */
+input[type="range"] {
+  -webkit-appearance: none;
+  background: transparent;
+  border: none !important; /* 移除滑桿容器的邊框 */
+  box-shadow: none !important;
+  padding: 0;
+  margin: 10px 0;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 20px; /* 軌道變粗 */
+  background: #FFF;
+  border: 4px solid #000;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0px #000;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 40px; /* 拉柄變大 */
+  width: 40px;
+  border-radius: 50%;
+  background: #FFF68F; /* 馬卡龍粉黃 */
+  border: 4px solid #000;
+  margin-top: -14px; /* 垂直置中調整 */
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #000;
+}
+
+/* Iframe 容器樣式 */
+#iframe-container {
+  border: 4px solid #000 !important;
+  border-radius: 20px !important;
+  box-shadow: 8px 8px 0px rgba(0,0,0,0.2) !important;
+  background-color: #fff !important;
+}
